@@ -1,0 +1,112 @@
+Part1
+load dtmri
+whos
+figure, imshow(mask, 'initialmagnification', 'fit')
+figure
+quiver3(0*g(:,1), 0*g(:,1), 0*g(:,1), g(:,1), g(:,2), g(:,3))
+axis vis3d
+xlabel x, ylabel y, zlabel z
+title('Gradient pulse directions g_i')
+
+syms D_xx D_yy D_zz D_xy D_xz D_yz
+D = [D_xx D_xy D_xz; D_xy D_yy D_yz; D_xz D_yz D_zz]
+D_tilde = [D_xx D_yy D_zz D_xy D_xz D_yz]'
+i = 1:64;
+j = 1:115;
+k = 1:90;
+
+B = (log(S(j,k,i)./S0(j,k)))./-b;
+w = cell(115,90) ;
+for j = 1:115
+    for k = 1:90
+        w{j,k} = squeeze(B(j,k,:)) ; 
+    end
+end 
+E = cell(115,90);
+   for j = 1:115
+     for k = 1:90    
+         E{j,k} = ((abs(w{j,k})+w{j,k})./2) ;  
+     end
+   end
+
+g1 = g(:,1);
+g2 = g(:,2);
+g3 = g(:,3);
+A = [g1.^2 g2.^2 g3.^2 2.*g1.*g2 2.*g1.*g3 2.*g2.*g3]'
+D_tilde = cell(115,90);
+for j = 1:115
+    for k = 1:90
+       D_tilde{j,k} = A'\ E{j,k} ; 
+    end
+end
+
+D = cell(115,90);
+for j = 1:115
+    for k = 1:90
+       D{j,k} = [D_tilde{j,k}(1) D_tilde{j,k}(4) D_tilde{j,k}(5); D_tilde{j,k}(4) D_tilde{j,k}(2) D_tilde{j,k}(6); D_tilde{j,k}(5) D_tilde{j,k}(6) D_tilde{j,k}(3)]; 
+    end
+end
+
+
+% eigenvalues: lambda1, lambda2, lambda3
+d = cell(115,90);
+for j = 1:115
+    for k = 1:90
+       d{j,k} = eig(D); 
+    end
+end
+
+% v1 = V(:,1);
+% v2 = V(:,2);
+% v3 = V(:,3);
+
+% Mean Diffusivity = (lambda1 + lambda2 + lambda3)/3
+MD1 = cell(115,90);
+for j = 1:115
+    for k = 1:90
+       MD1{j,k} = (sum(d{j,k}))/3 ; 
+    end
+end
+MD = cell2sym(MD1);
+MDS0 = MD.*S0;
+%MDw = MD.*w{j,k};
+
+%MDS = MD*N{i};
+%MDt = MDS + MDS0;
+figure
+imshow(mask, 'initialmagnification', 'fit')
+hold on
+imshow(MDt, 'initialmagnification','fit')
+
+
+% Fractional Anisotropy
+FA = sqrt((((lambda_1 - lambda_2)^2 + (lambda_2 - lambda_3)^2 + (lambda_1 - lambda_3)^2))/ (2*(lambda_1^2 + lambda_2^2 + lambda_3^2)))
+FAS0 = FA*S0;
+
+%FAS = FA*N{i};
+FAt = FAS0-FAS;
+figure
+imshow(mask, 'initialmagnification', 'fit')
+hold on
+imshow(FAt, 'initialMagnification','fit')
+hold off
+
+% Principal Diffusion x-axes: red = FA*cos (alpha); y-axes: green =
+% FA*cos(beta); z-axes: blue = FA*cos(gamma)
+syms alpha
+syms beta
+syms gamma
+%alpha = 
+%beta = 
+%gamma = 
+red = FA*cos(alpha)
+green = FA*cos(beta)
+blue = FA*cos(gamma)
+
+%figure
+%imshow(red, 'initialmagnification', 'fit')
+%hold on
+%imshow(green, 'initialmagnification', 'fit')
+%hold on
+%imshow(blue, 'initialmagnification', 'fit')
+%hold off
